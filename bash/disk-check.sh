@@ -7,7 +7,9 @@ readonly EXIT_UNKNOWN=3
 
 usage() {
     echo "Usage: $0 -d <disk> [-w <warning>] [-c <critical>] [-h]"
+    echo "Required:"
     echo "  -d <disk>      Specify a disk to check (e.g., /backup, /var). Can be used multiple times for multiple disks."
+    echo "Optional:"
     echo "  -w <warning>   Set warning threshold percentage (default: 70)."
     echo "  -c <critical>  Set critical threshold percentage (default: 80)."
     echo "  -h             Show this help message."

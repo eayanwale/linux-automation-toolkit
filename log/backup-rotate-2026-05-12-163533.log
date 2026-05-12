@@ -1,0 +1,14 @@
+Checking source disk-check.sh...
+Checking disk usage for backup directory temp...
+[2026-05-12-16:34:11] Disk check passed: 37% used (threshold: 80%).
+Archiving disk-check.sh to temp/2026-05-12/...
+[2026-05-12-16:34:11] Backup created successfully: temp/2026-05-12/disk-check.sh.tar.gz
+
+--- Backup complete ---
+total 8.0K
+-rw-r--r-- 1 enoch_5ew7dif 197610 852 May 12 15:50 disk-check.sh.tar
+-rw-r--r-- 1 enoch_5ew7dif 197610 852 May 12 16:34 disk-check.sh.tar.gz
+--- Backup details ---
+-rw-r--r-- 1 enoch_5ew7dif 197610 852 May 12 16:34 temp/2026-05-12/disk-check.sh.tar.gz
+Rotating backups older than 7 days or if disk usage exceeds 80%...
+[2026-05-12-16:34:11] Old backups rotated successfully.
