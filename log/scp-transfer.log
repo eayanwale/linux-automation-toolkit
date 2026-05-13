@@ -1,0 +1,98 @@
+[2026-05-12 19:40:39] Error: Missing required arguments.
+[2026-05-12 20:12:03] Source file(s):
+[2026-05-12 20:12:03]   disk-check.sh
+[2026-05-12 20:12:03] Destination:       enoch@ec2-user:file/path
+[2026-05-12 20:12:41] Source file(s):
+[2026-05-12 20:12:41]   disk-check.sh
+[2026-05-12 20:12:41] Destination:       enoch@ec2-user:file/path
+[2026-05-12 20:12:41] Identity:          
+[2026-05-12 20:12:41] Retries:           3
+[2026-05-12 20:12:41] No-verify:         false
+[2026-05-12 20:12:41] Dry run:           true
+[2026-05-12 20:12:41] No-progress:       false
+[2026-05-12 20:12:41] Timeout:           30
+[2026-05-12 20:12:41] ICMP ping to ec2-user failed (may be blocked by firewall, continuing to SSH test)
+[2026-05-12 20:21:14] 
+[2026-05-12 20:22:13] 
+[2026-05-12 21:38:46] 
+[2026-05-12 21:39:24] 
+[2026-05-12 21:40:11] 
+[2026-05-12 21:40:58] Source file(s):
+[2026-05-12 21:40:58] - disk-check.sh
+[2026-05-12 21:40:58] - scp-transfer.sh
+[2026-05-12 21:40:58] Destination:       enoch@ec2-user:file/path
+[2026-05-12 21:40:58] Identity:          
+[2026-05-12 21:40:58] Retries:           3
+[2026-05-12 21:40:58] No-verify:         false
+[2026-05-12 21:40:58] Dry run:           true
+[2026-05-12 21:40:58] No-progress:       false
+[2026-05-12 21:40:58] Timeout:           30
+[2026-05-12 21:40:58] Pinging ec2-user...
+[2026-05-12 21:40:58] Testing SSH connectivity to enoch@ec2-user...
+[2026-05-12 21:42:37] Source file(s):
+[2026-05-12 21:42:37] - disk-check.sh
+[2026-05-12 21:42:37] - scp-transfer.sh
+[2026-05-12 21:42:37] Destination:       enoch@ec2-user:file/path
+[2026-05-12 21:42:37] Identity:          
+[2026-05-12 21:42:37] Retries:           3
+[2026-05-12 21:42:37] No-verify:         false
+[2026-05-12 21:42:37] Dry run:           true
+[2026-05-12 21:42:37] No-progress:       false
+[2026-05-12 21:42:37] Timeout:           30
+[2026-05-12 21:42:37] Pinging ec2-user...
+[2026-05-12 21:42:37] ICMP ping to ec2-user failed (may be blocked by firewall, continuing to SSH test)
+[2026-05-12 21:42:37] Testing SSH connectivity to enoch@ec2-user...
+[2026-05-12 21:43:43] Source file(s):
+[2026-05-12 21:43:43] - disk-check.sh
+[2026-05-12 21:43:43] - scp-transfer.sh
+[2026-05-12 21:43:43] Destination:       enoch@ec2-user:file/path
+[2026-05-12 21:43:43] Identity:          
+[2026-05-12 21:43:43] Retries:           3
+[2026-05-12 21:43:43] No-verify:         false
+[2026-05-12 21:43:43] Dry run:           true
+[2026-05-12 21:43:43] No-progress:       false
+[2026-05-12 21:43:43] Timeout:           30
+[2026-05-12 21:43:43] Pinging ec2-user...
+[2026-05-12 21:43:43] ICMP ping to ec2-user failed (may be blocked by firewall, continuing to SSH test)
+[2026-05-12 21:43:43] Testing SSH connectivity to enoch@ec2-user...
+[2026-05-12 21:46:39] Source file(s):
+[2026-05-12 21:46:39] - disk-check.sh
+[2026-05-12 21:46:39] - scp-transfer.sh
+[2026-05-12 21:46:39] Destination:       enoch@ec2-user:file/path
+[2026-05-12 21:46:39] Identity:          
+[2026-05-12 21:46:39] Retries:           3
+[2026-05-12 21:46:39] No-verify:         false
+[2026-05-12 21:46:39] Dry run:           true
+[2026-05-12 21:46:39] No-progress:       false
+[2026-05-12 21:46:39] Timeout:           30
+[2026-05-12 21:46:39] Pinging ec2-user...
+[2026-05-12 21:46:40] ICMP ping to ec2-user failed (may be blocked by firewall, continuing to SSH test)
+[2026-05-12 21:46:40] Testing SSH connectivity to enoch@ec2-user...
+[2026-05-12 21:46:42] 
+[2026-05-12 21:47:43] Source file(s):
+[2026-05-12 21:47:43] - disk-check.sh
+[2026-05-12 21:47:43] - scp-transfer.sh
+[2026-05-12 21:47:43] Destination:       enoch@ec2-user:file/path
+[2026-05-12 21:47:43] Identity:          
+[2026-05-12 21:47:43] Retries:           3
+[2026-05-12 21:47:43] No-verify:         false
+[2026-05-12 21:47:43] Dry run:           true
+[2026-05-12 21:47:43] No-progress:       false
+[2026-05-12 21:47:43] Timeout:           30
+[2026-05-12 21:47:43] Pinging ec2-user...
+[2026-05-12 21:47:43] ICMP ping to ec2-user failed (may be blocked by firewall, continuing to SSH test)
+[2026-05-12 21:47:43] Testing SSH connectivity to enoch@ec2-user...
+[2026-05-12 21:47:46] 
+[2026-05-12 21:47:55] Source file(s):
+[2026-05-12 21:47:55] - disk-check.sh
+[2026-05-12 21:47:55] - scp-transfer.sh
+[2026-05-12 21:47:55] Destination:       enoch@ec2-user:file/path
+[2026-05-12 21:47:55] Identity:          
+[2026-05-12 21:47:55] Retries:           3
+[2026-05-12 21:47:55] No-verify:         false
+[2026-05-12 21:47:55] Dry run:           true
+[2026-05-12 21:47:55] No-progress:       false
+[2026-05-12 21:47:55] Timeout:           30
+[2026-05-12 21:47:55] Pinging ec2-user...
+[2026-05-12 21:47:55] ICMP ping to ec2-user failed (may be blocked by firewall, continuing to SSH test)
+[2026-05-12 21:47:55] Testing SSH connectivity to enoch@ec2-user...
