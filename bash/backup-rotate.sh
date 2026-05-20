@@ -3,7 +3,7 @@
 set -euo pipefail
 
 LOG_FILE="../log/backup-rotate.log"
-if [ -f "$LOG_FILE" ] && [ $(wc -l < "$LOG_FILE") -gt 100 ]; then
+if [ -f "$LOG_FILE" ] && [ "$(wc -l < "$LOG_FILE")" -gt 100 ]; then
     mv "$LOG_FILE" "../log/backup-rotate-$(date +%Y-%m-%d-%H%M%S).log"
     find ../log/ -name "backup-rotate-*.log" -mtime +100 -delete
 fi
@@ -79,6 +79,7 @@ list_args() {
 
 # Default values
 declare -a SOURCE=()
+BACKUP_DIR=""
 ROTATE_DAYS=7
 THRESHOLD=80
 DRY_RUN=false
@@ -111,11 +112,11 @@ done
 if [ -z "$BACKUP_DIR" ]; then
     error "Backup directory is required. Use -b <backup_dir> to specify it."
     usage
-    exit 1
+    exit $EXIT_SRC_FAIL
 elif [ ${#SOURCE[@]} -eq 0 ]; then
     error "At least one source directory/file is required. Use -s <source_dir> to specify it."
     usage
-    exit 1
+    exit $EXIT_SRC_FAIL
 fi
 
 
@@ -195,14 +196,13 @@ ls -lh "$BACKUP_DIR/$TIME"
 
 # Rotate old backups
 log "Rotating backups older than $ROTATE_DAYS days or if disk usage exceeds $THRESHOLD%..."
-if ! find "$BACKUP_DIR" -maxdepth 1 -mindepth 1 -type d -mtime +$ROTATE_DAYS -exec rm -rf {} \; then
-    if ! [[ "$ROTATE_DAYS" =~ ^[0-9]+$ ]] || (( ROTATE_DAYS < 1 )); then
-        error "-r must be a positive integer, got '$ROTATE_DAYS'"
-        exit 1
-    fi
-    error "Failed to rotate old backups in $BACKUP_DIR."
+old_dirs=$(find "$BACKUP_DIR" -maxdepth 1 -mindepth 1 -type d -mtime +"$ROTATE_DAYS")
+if [[ -n "$old_dirs" ]]; then
+    echo "$old_dirs" | while read -r dir; do
+        rm -rf "$dir"
+    done
+else
     exit $EXIT_ROTATE_FAIL
-fi
 
 success "Old backups rotated."
 exit $EXIT_OK

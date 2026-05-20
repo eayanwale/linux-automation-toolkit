@@ -3,16 +3,20 @@
 set -euo pipefail
 
 LOG_FILE="../log/sys-health.log"
-if [ -f "$LOG_FILE" ] && [ $(wc -l < "$LOG_FILE") -gt 100 ]; then
+if [ -f "$LOG_FILE" ] && [ "$(wc -l < "$LOG_FILE")" -gt 100 ]; then
     mv "$LOG_FILE" "../log/sys-health-$(date +%Y-%m-%d-%H%M%S).log"
     find ../log/ -name "sys-health-*.log" -mtime +100 -delete
 fi
 
 # Exit codes
-readonly EXIT_OK=0
 readonly EXIT_WARNING=1
 readonly EXIT_CRITICAL=2
-readonly EXIT_UNKNOWN=3
+readonly CPU_WARN=70
+readonly CPU_CRIT=90
+readonly MEM_WARN=80
+readonly MEM_CRIT=95
+readonly DISK_WARN=80
+readonly DISK_CRIT=90
 
 readonly LOAD_WARN_MULTIPLIER=2
 
@@ -35,7 +39,7 @@ usage() {
     echo "Examples:"
     echo "  system-health.sh                    # Full report"
     echo "  system-health.sh -s                 # One-line-per-section summary"
-    echo "  system-health.sh -c disk mem        # Only disk and memory checks"
+    echo "  system-health.sh -c disk -c mem     # Only disk and memory checks"
 }
 
 version() { VERSION="v1.0.0"; echo $VERSION; }
@@ -46,7 +50,7 @@ worst_status=0
 update_status() {
     local status="$1"
     if [[ $status -gt $worst_status ]]; then
-        $worst_status=$status
+        worst_status=$status
     fi
 }
 
@@ -58,7 +62,7 @@ status_label() {
     if [[ $value -ge $crit ]]; then
         update_status 2
         echo "CRITICAL"
-    elif [[ value -ge warn ]]; then
+    elif [[ $value -ge $warn ]]; then
         update_status 1
         echo "WARNING"
     else
@@ -67,14 +71,19 @@ status_label() {
 }
 
 check_uptime() {
+    local host_name kernel os_name raw_up_time up_time
+    host_name=$HOSTNAME
+    kernel=$(uname -r)
+    os_name=$(grep "PRETTY_NAME=" "/etc/os-release" | sed 's/PRETTY_NAME=//g')
+    raw_up_time=$(uptime | awk '{print $2,$3,$4,$5" minutes"}' | tr -s ',' ' ' | sed 's/:/ hours, /')
+    up_time=$(uptime -p 2>/dev/null || echo "$raw_up_time")
+
+    if [[ "$SHORT_MODE" == true ]]; then
+        echo "SYSTEM: $host_name - up $up_time days - $os_name"
+        return
+    fi
+
     section "SYSTEM"
-
-    local host_name=$HOSTNAME
-    local kernel=$(uname -r)
-    local os_name=$(grep "PRETTY_NAME=" "/etc/os-release" | sed 's/PRETTY_NAME=//g')
-    local raw_up_time=$(uptime | awk '{print $2,$3,$4,$5" minutes"}' | tr -s ',' ' ' | sed 's/:/ hours, /')
-    local up_time=$(uptime -p 2>/dev/null || echo "$raw_up_time")
-
     printf "  %-20s %s\n" "Hostname:" "$host_name"
     printf "  %-20s %s\n" "Time:" "$DATE"
     printf "  %-20s %s\n" "Kernel:" "$kernel"
@@ -83,9 +92,7 @@ check_uptime() {
 
 }
 
-check_cpu() {
-    section "CPU"
-    
+check_cpu() {    
     local cpu_cores
     cpu_cores=$(nproc 2>/dev/null || grep -c '^processor' /proc/cpuinfo)
 
@@ -99,31 +106,35 @@ check_cpu() {
 
     local idle1 total1 idle2 total2
 
-    idle1=$(awk '{print $5}' <<< $cpu_line1)
-    total1=$(awk '{sum=0; for(i=2;i<=NF;i++) sum+=$i; print sum}' <<< $cpu_line1)
+    idle1=$(awk '{print $5}' <<< "$cpu_line1")
+    total1=$(awk '{sum=0; for(i=2;i<=NF;i++) sum+=$i; print sum}' <<< "$cpu_line1")
 
-    idle2=$(awk '{print $5}' <<< $cpu_line2)
-    total2=$(awk '{sum=0; for(i=2;i<=NF;i++) sum+=$i; print sum}' <<< $cpu_line2)
+    idle2=$(awk '{print $5}' <<< "$cpu_line2")
+    total2=$(awk '{sum=0; for(i=2;i<=NF;i++) sum+=$i; print sum}' <<< "$cpu_line2")
 
     idle_delta=$(( idle2 - idle1 ))
     total_delta=$(( total2 - total1 ))
 
     local cpu_pct=0
 
-    if [[ $cpu_pct -gt 0 ]]; then
-        cpu_pct=$(( 100 * ( total_delta - idle_delta ) / total_delta ))
+    if (( total_delta > 0 )); then
+        cpu_pct=$(( 100 * (total_delta - idle_delta) / total_delta ))
     fi
 
     local label
-    label=$(status_label "$cpu_pct" "$EXIT_WARNING" "$EXIT_CRITICAL")
+    label=$(status_label "$cpu_pct" "$CPU_WARN" "$CPU_CRIT")
 
+    if [[ "$SHORT_MODE" == true ]]; then
+        echo "CPU: $cpu_pct [$label]"
+        return
+    fi
+
+    section "CPU"
     printf "  %-20s %s\n" "Cores:" "$cpu_cores"
     printf "  %-20s %s%% [%s]\n" "Usage:" "$cpu_pct" "$label"
 }
 
-check_load() {
-    section "LOAD AVERAGE"
-    
+check_load() {    
     local load1 load5 load15
     read -r load1 load5 load15 _ < /proc/loadavg
 
@@ -136,6 +147,17 @@ check_load() {
     load1_int=$(awk '{printf "%d", $1 * 100}' <<< "$load1")
     local warn_int=$(( warn_thresh * 100 ))
 
+    if [[ "$SHORT_MODE" == true ]]; then
+        if [[ $load1_int -gt $warn_int ]]; then
+            echo "  LOAD:      ${load1} / ${cpu_count} cores [WARNING]"
+            update_status 1
+        else
+            echo "  LOAD:      ${load1} / ${cpu_count} cores [OK]"
+        fi
+        return
+    fi
+
+    section "LOAD AVERAGE"
     printf "  %-20s %s\n" "1 min:" "$load1"
     printf "  %-20s %s\n" "5 min:" "$load5"
     printf "  %-20s %s\n" "15 min:" "$load15"
@@ -150,8 +172,6 @@ check_load() {
 }
 
 check_mem() {
-    section "MEMORY"
-
     local all_mem=""
     if command -v free >/dev/null 2>&1; then
         all_mem=$(free -m | awk '
@@ -164,13 +184,18 @@ check_mem() {
         return 1
     fi
 
-    local total used free_mem available
-    read -r total used free_mem available <<< "$all_mem"
+    local total used available
+    read -r total used _ available <<< "$all_mem"
 
     local pct=$(( 100 * ( total - available ) / total ))
 
     local label
-    label=$(status_label "$pct" "$EXIT_WARNING" "$EXIT_CRITICAL")
+    label=$(status_label "$pct" "$MEM_WARN" "$MEM_CRIT")
+
+    if [[ "$SHORT_MODE" == true ]]; then
+        echo "  MEMORY:    ${pct}% [${label}]"
+        return
+    fi
 
     local swap_info swap_pct
     swap_info=$(free -m | awk '/^Swap:/ {printf "%d %d", $2, $3}')
@@ -178,10 +203,11 @@ check_mem() {
 
     local swap_pct=0
 
-    if [[ $swap_total > 0 ]]; then
+    if (( swap_total > 0 )); then
         swap_pct=$(( 100 * ( swap_used / swap_total ) ))
     fi
 
+    section "MEMORY"
     printf "  %-20s %s\n" "Total:" "$total"
     printf "  %-20s %s\n" "Used:" "$used"
     printf "  %-20s %s\n" "Available:" "$available"
@@ -190,8 +216,16 @@ check_mem() {
 }
 
 check_disk() {
-    section "DISKS"
+    if [[ "$SHORT_MODE" == true ]]; then
+        while read -r _ _ _ _ pct mount; do
+            usage="${pct%\%}"
+            label=$(status_label "${usage}" "${DISK_WARN}" "${DISK_CRIT}")
+            echo "  DISK ${mount}: ${usage}% [${label}]"
+        done < <(df -P -x tmpfs -x devtmpfs -x overlay | awk 'NR>1')
+        return
+    fi
 
+    section "DISKS"
     while read -r _ _ _ _ pct mount; do
         usage="${pct%\%}"
         label=$(status_label "${usage}" "${DISK_WARN}" "${DISK_CRIT}")
@@ -249,11 +283,10 @@ sysv_services() {
 }
 
 check_services() {
-    section "SERVICES"
-
     local key_services=("sshd" "crond" "cron" "rsyslog" "syslog")
     local checked=0
 
+    section "SERVICES"
     if command -v systemctl >/dev/null 2>&1; then
         systemd_services key_services checked
     elif command -v service >/dev/null 2>&1; then
@@ -267,6 +300,13 @@ check_services() {
 }
 
 check_network() {
+    if [[ "$SHORT_MODE" == true ]]; then
+        local net_status="unreachable"
+        ping -q -c 1 -W 3 8.8.8.8 >/dev/null 2>&1 && net_status="reachable"
+        echo "  NETWORK:   ${net_status}"
+        return
+    fi
+    
     section "NETWORK"
 
     if command -v ip >/dev/null 2>&1; then
@@ -279,7 +319,7 @@ check_network() {
     if ping -q -c 1 -W 3 8.8.8.8 >/dev/null 2>&1; then
         echo "  Internet:       reachable (via 8.8.8.8)"
     else
-        echo "  Internet;       unreachable or ICMP blocked"
+        echo "  Internet:       unreachable or ICMP blocked"
     fi
 
     if command -v host >/dev/null 2>&1; then
@@ -297,7 +337,7 @@ check_network() {
             update_status 1
         fi
     else
-        echo "  DNS:        no resolver too available"
+        echo "  DNS:        no resolver tool available"
         update_status 1
     fi
 }
@@ -312,7 +352,19 @@ run_check() {
     return 1
 }
 
+echo ""
+echo " ==== SUMMARY ==== "
+case $worst_status in
+    0) echo "  Overall: ✓ ALL OK" ;;
+    1) echo "  Overall: ⚠ WARNINGS detected" ;;
+    2) echo "  Overall: ✗ CRITICAL issues detected" ;;
+esac
+echo ""
+
+exit $worst_status
+
 declare -a CHECKS=()
+SHORT_MODE=false
 
 while getopts ":sc:vh" opt; do
     case $opt in

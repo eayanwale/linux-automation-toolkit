@@ -3,7 +3,7 @@
 set -euo pipefail
 
 LOG_FILE="../log/scp-transfer.log"
-if [ -f "$LOG_FILE" ] && [ $(wc -l < "$LOG_FILE") -gt 100 ]; then
+if [ -f "$LOG_FILE" ] && [ "$(wc -l < "$LOG_FILE")" -gt 100 ]; then
     mv "$LOG_FILE" "../log/scp-transfer-$(date +%Y-%m-%d-%H%M%S).log"
     find ../log/ -name "scp-transfer-*.log" -mtime +100 -delete
 fi
@@ -62,7 +62,8 @@ usage() {
 }
 
 log() { 
-    local TS=$(date '+%Y-%m-%d %H:%M:%S')
+    local TS
+    TS=$(date '+%Y-%m-%d %H:%M:%S')
     echo "[$TS] $*"
     echo "[$TS] $*" >> "$LOG_FILE"
 }
@@ -94,7 +95,7 @@ check_host() {
     fi
     
     log "Testing SSH connectivity to $REMOTE_USER@$HOST..."
-    if ! ssh -q logLevel QUIET "${options[@]}" $REMOTE_USER@$HOST "exit 0"; then
+    if ! ssh -q logLevel QUIET "${options[@]}" "$REMOTE_USER@$HOST" "exit 0"; then
         error "Unable to authenticate to $HOST with user $REMOTE_USER."
         return $HOST_UNREACHABLE
     else
@@ -106,7 +107,7 @@ check_host() {
 do_transfer() {
     local attempt=1
 
-    while (( attempt < $RETRIES )); do
+    while (( attempt < RETRIES )); do
         log "Transfer attempt $attempt of $RETRIES..." 
         
         local -a scp_cmd+=(scp -r)
@@ -135,9 +136,11 @@ verify_transfer() {
     for file in "${SOURCE[@]}"; do
         [[ -d "$file" ]] && log "Skipping checksum for directory: $file"; continue
        
-        local local_checksum=$(sha256sum "$file" | awk '{print $1}')
-        local remote_checksum=$(ssh "${options[@]}" $REMOTE_USER@$HOST \
-            "sha256sum $REMOTE_PATH/$(basename "$file")" 2>/dev/null | awk '{print $1}')
+        local local_checksum
+        local_checksum=$(sha256sum "$file" | awk '{print $1}')
+        local remote_checksum
+        remote_checksum=$(ssh "${options[@]}" "$REMOTE_USER@$HOST" \
+            "sha256sum '$REMOTE_PATH/$(basename "$file")'" 2>/dev/null | awk '{print $1}')
 
         if [ "$local_checksum" != "$remote_checksum" ]; then
             log; error "Checksum mismatch (local: $local_checksum remote: $remote_checksum)"
@@ -160,7 +163,7 @@ IDENTITY_FILE=""
 
 # SSH options builder
 declare -ga options=()
-options+=( -o ConnectTimeout=$TIMEOUT -o BatchMode=yes )
+options+=( -o "ConnectTimeout=$TIMEOUT" -o BatchMode=yes )
 [[ -n "${IDENTITY_FILE}" ]] && options+=( -i "${IDENTITY_FILE}" )
 
 # Parse long options
@@ -168,7 +171,6 @@ for arg in "$@"; do
     case "$arg" in
         --dry-run) DRY_RUN=true; shift ;;
         --no-progress) NO_PROGRESS=true; shift ;;
-        --no-check) NO_CHECK=true; shift ;;
         --no-verify) NO_VERIFY=true; shift ;;
         --version) version; exit 0 ;;
         --help)    usage; exit 0 ;;
@@ -208,7 +210,7 @@ if [ $DRY_RUN == true ]; then
         dry "   $source -> $REMOTE_USER@$HOST:$REMOTE_PATH"
     done
     
-    dry "scp "${options[@]}" ${SOURCE[*]} $REMOTE_USER@$HOST:$REMOTE_PATH"
+    dry "scp ${options[*]} ${SOURCE[*]} ${REMOTE_USER}@${HOST}:${REMOTE_PATH}"
 
     for source in "${SOURCE[@]}"; do
         if [ $NO_VERIFY == false ]; then
