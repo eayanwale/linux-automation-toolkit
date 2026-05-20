@@ -139,6 +139,7 @@ verify_transfer() {
         local local_checksum
         local_checksum=$(sha256sum "$file" | awk '{print $1}')
         local remote_checksum
+        # shellcheck disable=SC2029
         remote_checksum=$(ssh "${options[@]}" "$REMOTE_USER@$HOST" \
             "sha256sum '$REMOTE_PATH/$(basename "$file")'" 2>/dev/null | awk '{print $1}')
 

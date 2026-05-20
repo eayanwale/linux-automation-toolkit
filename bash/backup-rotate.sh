@@ -123,7 +123,7 @@ fi
 # Dry run mode
 if [ "$DRY_RUN" = true ]; then
     list_args; echo
-    log "${BACKUP_DIR} is $(df -P $BACKUP_DIR 2>/dev/null | awk 'NR==2 {gsub("%","",$5); print $5}')% full (threshold: ${THRESHOLD}%)."
+    log "${BACKUP_DIR} is $(df -P "$BACKUP_DIR" 2>/dev/null | awk 'NR==2 {gsub("%","",$5); print $5}')% full (threshold: ${THRESHOLD}%)."
 
     if [ ! -d "$BACKUP_DIR/$TIME" ]; then
         dry "create backup directory $BACKUP_DIR/$TIME"
@@ -136,7 +136,7 @@ if [ "$DRY_RUN" = true ]; then
             echo "  $input -> $BACKUP_DIR/$TIME/$(basename "$input").tar.gz"
     done
 
-    dry_run_rotate=$(find "$BACKUP_DIR" -mtime +$ROTATE_DAYS)
+    dry_run_rotate=$(find "$BACKUP_DIR" -mtime +"$ROTATE_DAYS")
     if [ -z "$dry_run_rotate" ]; then
         dry "no backups older than $ROTATE_DAYS days to rotate."
     else
@@ -153,7 +153,7 @@ fi
 # Disk check for backup directory
 log "Checking disk usage for backup directory $BACKUP_DIR..."
 
-disk_check=$(df -P $BACKUP_DIR 2>/dev/null | awk 'NR==2 {gsub("%","",$5); print $5}')
+disk_check=$(df -P "$BACKUP_DIR" 2>/dev/null | awk 'NR==2 {gsub("%","",$5); print $5}')
 if [ -z "$disk_check" ]; then
     error "Unable to determine disk usage for $BACKUP_DIR."
     exit $EXIT_BACKUP_FAIL
@@ -168,9 +168,7 @@ fi
 if [ ! -d "$BACKUP_DIR/$TIME" ]; then
     log "Backup directory $BACKUP_DIR/$TIME does not exist. Creating it..."
 
-    mkdir -p "$BACKUP_DIR/$TIME"
-
-    if [ $? -ne 0 ]; then
+    if ! mkdir -p "$BACKUP_DIR/$TIME"; then
         error "Failed to create backup directory $BACKUP_DIR/$TIME."
         exit $EXIT_BACKUP_FAIL
     fi
