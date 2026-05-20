@@ -202,6 +202,7 @@ if [ -z "${SOURCE[*]:-}" ] || [ -z "${REMOTE_USER:-}" ] || [ -z "${HOST:-}" ] ||
 fi
 
 # Dry run mode
+# shellcheck disable=SC2029
 if [ $DRY_RUN == true ]; then
     list_args; echo; check_host
 

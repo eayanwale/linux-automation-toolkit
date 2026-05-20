@@ -203,6 +203,7 @@ if [[ -n "$old_dirs" ]]; then
     done
 else
     exit $EXIT_ROTATE_FAIL
+fi
 
 success "Old backups rotated."
 exit $EXIT_OK

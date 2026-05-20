@@ -1,16 +1,8 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2317
 
 set -euo pipefail
 
-LOG_FILE="../log/sys-health.log"
-if [ -f "$LOG_FILE" ] && [ "$(wc -l < "$LOG_FILE")" -gt 100 ]; then
-    mv "$LOG_FILE" "../log/sys-health-$(date +%Y-%m-%d-%H%M%S).log"
-    find ../log/ -name "sys-health-*.log" -mtime +100 -delete
-fi
-
-# Exit codes
-readonly EXIT_WARNING=1
-readonly EXIT_CRITICAL=2
 readonly CPU_WARN=70
 readonly CPU_CRIT=90
 readonly MEM_WARN=80
@@ -42,7 +34,7 @@ usage() {
     echo "  system-health.sh -c disk -c mem     # Only disk and memory checks"
 }
 
-version() { VERSION="v1.0.0"; echo $VERSION; }
+version() { VERSION="v1.0.0"; echo "$VERSION"; }
 
 section() { echo " ==== $1 ==== "; }
 
@@ -351,6 +343,13 @@ run_check() {
     done
     return 1
 }
+
+LOG_FILE="../log/sys-health.log"
+mkdir $LOG_FILE
+if [ -f "$LOG_FILE" ] && [ "$(wc -l < "$LOG_FILE")" -gt 100 ]; then
+    mv "$LOG_FILE" "../log/sys-health-$(date +%Y-%m-%d-%H%M%S).log"
+    find ../log/ -name "sys-health-*.log" -mtime +100 -delete
+fi
 
 echo ""
 echo " ==== SUMMARY ==== "
